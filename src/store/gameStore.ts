@@ -13,6 +13,7 @@ import type {
   WeatherType,
   Prescription,
   TreatmentResult,
+  SubstitutionRecord,
 } from "@/types/game";
 import {
   BREEDS,
@@ -26,6 +27,7 @@ import {
   NOTES_SUCCESS,
   NOTES_FAIL,
   DISEASE_NAMES,
+  SUBSTITUTION_REASON_TEXT,
 } from "@/data/gameData";
 
 const DISEASE_TYPES: DiseaseType[] = [
@@ -126,7 +128,7 @@ export interface GameState {
   selectBeast: (id: string | null) => void;
   selectBed: (id: string | null) => void;
   dismissBeast: (id: string) => void;
-  assignBedAndTreat: (beastId: string, bedId: string, staffId: string | null, herbIds: string[], playerDiagnosis: DiseaseType | null) => void;
+  assignBedAndTreat: (beastId: string, bedId: string, staffId: string | null, herbIds: string[], playerDiagnosis: DiseaseType | null, substitutions?: SubstitutionRecord[]) => void;
   purchaseHerb: (herbId: string, qty: number) => void;
   collectFromBed: (bedId: string) => void;
   addNotification: (type: Notification["type"], message: string) => void;
@@ -149,6 +151,7 @@ function createInitialBeds(): Bed[] {
     treatmentTotal: 0,
     result: "pending",
     currentPrescriptionHerbs: [],
+    substitutions: [],
     playerDiagnosis: null,
     startedAt: null,
     beastSnapshot: null,
@@ -256,7 +259,7 @@ export const useGameStore = create<GameState>()(
         get().addNotification("success", `采购 ${herb.name} x${qty}，花费${totalCost}金`);
       },
 
-      assignBedAndTreat: (beastId, bedId, staffId, herbIds, playerDiagnosis) => {
+      assignBedAndTreat: (beastId, bedId, staffId, herbIds, playerDiagnosis, substitutions = []) => {
         const s = get();
         const beast = s.waitingQueue.find(b => b.id === beastId);
         const bed = s.beds.find(b => b.id === bedId);
@@ -280,16 +283,29 @@ export const useGameStore = create<GameState>()(
 
         const newInventory = { ...s.inventory };
         herbIds.forEach(hid => { newInventory[hid] = (newInventory[hid] ?? 0) - 1; });
-        const herbsCost = herbIds.reduce((sum, hid) => {
+        let herbsCost = herbIds.reduce((sum, hid) => {
           const h = HERBS.find(x => x.id === hid);
           return sum + (h?.price ?? 0);
         }, 0);
+
+        for (const sub of substitutions) {
+          const subHerb = HERBS.find(h => h.id === sub.substituteHerbId);
+          const origHerb = HERBS.find(h => h.id === sub.originalHerbId);
+          if (subHerb && origHerb) {
+            herbsCost = herbsCost - origHerb.price + subHerb.price;
+          }
+        }
 
         const hasStaff = !!staffId;
         const staffSkillBonus = staffId ? (s.staff.find(x => x.id === staffId)?.skillLevel ?? 1) * 5 : 0;
         void staffSkillBonus;
 
-        const totalHours = calcTreatmentHours(beast.severity, hasStaff);
+        let totalHours = calcTreatmentHours(beast.severity, hasStaff);
+        let durationMultTotal = 1;
+        for (const sub of substitutions) {
+          durationMultTotal *= sub.durationChange;
+        }
+        totalHours = Math.ceil(totalHours * durationMultTotal);
 
         const newBeds = s.beds.map(b => b.id === bedId ? {
           ...b,
@@ -300,6 +316,7 @@ export const useGameStore = create<GameState>()(
           treatmentTotal: totalHours,
           result: "pending" as const,
           currentPrescriptionHerbs: [...herbIds],
+          substitutions: [...substitutions],
           playerDiagnosis,
           startedAt: s.currentTime,
           beastSnapshot: {
@@ -328,7 +345,8 @@ export const useGameStore = create<GameState>()(
           selectedBeastId: null,
         }));
         get()._addTransaction("expense", "药材消耗", herbsCost, `${beast.name} 治疗消耗药材`);
-        get().addNotification("info", `${beast.name} 已入住 ${bed.name}，预计${totalHours}小时治疗`);
+        const subNote = substitutions.length > 0 ? `（含${substitutions.length}味替代药材）` : "";
+        get().addNotification("info", `${beast.name} 已入住 ${bed.name}，预计${totalHours}小时治疗${subNote}`);
       },
 
       collectFromBed: (bedId) => {
@@ -387,6 +405,7 @@ export const useGameStore = create<GameState>()(
             disease: beast.disease,
             severity: beast.severity,
             prescriptions: treatmentHerbs,
+            substitutions: bed.substitutions || [],
             success: true,
             revenue,
             daysToHeal,
@@ -427,6 +446,7 @@ export const useGameStore = create<GameState>()(
             disease: beast.disease,
             severity: beast.severity,
             prescriptions: treatmentHerbs,
+            substitutions: bed.substitutions || [],
             success: false,
             revenue: -penaltyMoney,
             daysToHeal: Math.max(1, Math.ceil((s.currentTime - (bed.startedAt ?? s.currentTime)) / 24) || 1),
@@ -454,6 +474,7 @@ export const useGameStore = create<GameState>()(
           treatmentTotal: 0,
           result: "pending" as const,
           currentPrescriptionHerbs: [],
+          substitutions: [],
           playerDiagnosis: null,
           startedAt: null,
           beastSnapshot: null,
@@ -566,7 +587,12 @@ export const useGameStore = create<GameState>()(
               // 疾病严重度减成
               const sev = b.beastSnapshot?.severity ?? "mild";
               const sevDebuff = { mild: 0, moderate: -5, severe: -10, critical: -15 }[sev] || 0;
-              finalRate = Math.max(5, Math.min(98, finalRate + sevDebuff));
+              finalRate += sevDebuff;
+              // 替代药材惩罚
+              for (const sub of (b.substitutions || [])) {
+                finalRate += sub.successRateChange;
+              }
+              finalRate = Math.max(5, Math.min(98, finalRate));
               result = Math.random() * 100 <= finalRate ? "success" : "fail";
             }
             return { ...b, treatmentProgress: Math.min(newProgress, b.treatmentTotal), result };

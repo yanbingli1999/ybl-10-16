@@ -88,6 +88,7 @@ export interface Bed {
   treatmentTotal: number;
   result: TreatmentResult;
   currentPrescriptionHerbs: string[];
+  substitutions: SubstitutionRecord[];
   playerDiagnosis: DiseaseType | null;
   startedAt: number | null;
   beastSnapshot: {
@@ -121,6 +122,7 @@ export interface MedicalRecord {
   disease: DiseaseType;
   severity: Severity;
   prescriptions: string[];
+  substitutions: SubstitutionRecord[];
   success: boolean;
   revenue: number;
   daysToHeal: number;
@@ -144,6 +146,27 @@ export interface BeastRelationship {
   visits: number;
   evolved: boolean;
   highestStage: number;
+}
+
+export type SubstitutionReason = "same_element" | "similar_effect";
+
+export interface SubstitutionRule {
+  originalHerbId: string;
+  substituteHerbId: string;
+  reason: SubstitutionReason;
+  costMultiplier: number;
+  successRatePenalty: number;
+  durationMultiplier: number;
+}
+
+export interface SubstitutionRecord {
+  originalHerbId: string;
+  substituteHerbId: string;
+  reason: SubstitutionReason;
+  reasonText: string;
+  costChange: number;
+  successRateChange: number;
+  durationChange: number;
 }
 
 export interface Notification {

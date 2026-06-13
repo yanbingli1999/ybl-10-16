@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
-import { BookOpen, Heart, Star, Award, FileText, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Heart, Star, Award, FileText, ChevronDown, ChevronUp, RefreshCw } from "lucide-react";
 import { useGameStore } from "@/store/gameStore";
 import { BREEDS, DISEASE_NAMES, SEVERITY_NAMES, HERBS } from "@/data/gameData";
-import { ELEMENT_EMOJI, ELEMENT_NAMES } from "@/data/gameData";
+import { ELEMENT_EMOJI, ELEMENT_NAMES, SUBSTITUTION_REASON_TEXT } from "@/data/gameData";
 
 export default function ArchivePage() {
   const discovered = useGameStore(s => s.discoveredBreeds);
@@ -165,6 +165,11 @@ export default function ArchivePage() {
                             ✨ 发生进化
                           </span>
                         )}
+                        {r.substitutions && r.substitutions.length > 0 && (
+                          <span className="tag bg-orange-100 text-orange-700 border-orange-300">
+                            🔄 含替代
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs text-gray-600 mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5">
                         <span>{r.date}</span>
@@ -186,11 +191,15 @@ export default function ArchivePage() {
                         <div className="p-2 rounded-lg bg-white/60">
                           <div className="text-gray-500 mb-1">💊 使用药材</div>
                           <div className="flex flex-wrap gap-1">
-                            {herbs.length > 0 ? herbs.map((h, i) => h && (
-                              <span key={i} className="tag bg-clinic-amber/20 text-clinic-deep border-clinic-amber/40">
-                                {h.emoji} {h.name}
-                              </span>
-                            )) : (
+                            {herbs.length > 0 ? herbs.map((h, i) => {
+                              if (!h) return null;
+                              const isSub = r.substitutions?.some(s => s.substituteHerbId === h.id);
+                              return (
+                                <span key={i} className={`tag border ${isSub ? "bg-orange-100 text-orange-700 border-orange-300" : "bg-clinic-amber/20 text-clinic-deep border-clinic-amber/40"}`}>
+                                  {h.emoji} {h.name}{isSub ? " (替)" : ""}
+                                </span>
+                              );
+                            }) : (
                               <span className="italic text-gray-400">无记录</span>
                             )}
                           </div>
@@ -200,6 +209,36 @@ export default function ArchivePage() {
                           <div className="text-clinic-deep italic">「{r.notes}」</div>
                         </div>
                       </div>
+                      {r.substitutions && r.substitutions.length > 0 && (
+                        <div className="mt-2 p-2 rounded-lg bg-orange-50/80 border border-orange-200/60">
+                          <div className="text-orange-700 mb-1.5 flex items-center gap-1">
+                            <RefreshCw className="w-3.5 h-3.5 text-orange-500" />
+                            药材替代记录
+                          </div>
+                          <div className="space-y-1">
+                            {r.substitutions.map((sub, idx) => {
+                              const origHerb = HERBS.find(h => h.id === sub.originalHerbId);
+                              const subHerb = HERBS.find(h => h.id === sub.substituteHerbId);
+                              return (
+                                <div key={idx} className="text-[11px] flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-gray-500 line-through">{origHerb?.emoji} {origHerb?.name}</span>
+                                  <span className="text-orange-400">→</span>
+                                  <span className="text-orange-700 font-medium">{subHerb?.emoji} {subHerb?.name}</span>
+                                  <span className="px-1 py-0 rounded bg-orange-100 text-orange-600 text-[9px] border border-orange-200">
+                                    {sub.reasonText}
+                                  </span>
+                                  <span className={`text-[10px] ${sub.costChange > 0 ? "text-clinic-crisis" : "text-emerald-600"}`}>
+                                    {sub.costChange > 0 ? "+" : ""}{sub.costChange}金
+                                  </span>
+                                  <span className="text-[10px] text-clinic-crisis">
+                                    成功率{sub.successRateChange}%
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

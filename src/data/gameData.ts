@@ -1,4 +1,4 @@
-import type { Breed, Herb, Prescription, DiseaseType, Staff } from "@/types/game";
+import type { Breed, Herb, Prescription, DiseaseType, Staff, SubstitutionRule } from "@/types/game";
 
 export const DISEASE_SYMPTOMS: Record<DiseaseType, string[]> = {
   fever: ["体温偏高", "无精打采", "食欲不振", "鼻子发干", "魔力发热"],
@@ -438,3 +438,34 @@ export const NOTES_FAIL = [
   "只得转往大城市的高级诊所求治。",
   "灵兽对这里产生了阴影，不愿再踏入半步。",
 ];
+
+export const SUBSTITUTION_REASON_TEXT: Record<string, string> = {
+  same_element: "同元素替代",
+  similar_effect: "近效替代",
+};
+
+export const HERB_SUBSTITUTIONS: SubstitutionRule[] = [
+  { originalHerbId: "herb_cold", substituteHerbId: "herb_water", reason: "same_element", costMultiplier: 0.8, successRatePenalty: -8, durationMultiplier: 1.2 },
+  { originalHerbId: "herb_water", substituteHerbId: "herb_cold", reason: "same_element", costMultiplier: 1.25, successRatePenalty: -6, durationMultiplier: 1.15 },
+  { originalHerbId: "herb_wood", substituteHerbId: "herb_antidote", reason: "same_element", costMultiplier: 1.36, successRatePenalty: -10, durationMultiplier: 1.25 },
+  { originalHerbId: "herb_antidote", substituteHerbId: "herb_wood", reason: "same_element", costMultiplier: 0.73, successRatePenalty: -10, durationMultiplier: 1.3 },
+  { originalHerbId: "herb_energy", substituteHerbId: "herb_light", reason: "same_element", costMultiplier: 1.43, successRatePenalty: -7, durationMultiplier: 1.15 },
+  { originalHerbId: "herb_light", substituteHerbId: "herb_energy", reason: "same_element", costMultiplier: 0.7, successRatePenalty: -12, durationMultiplier: 1.3 },
+  { originalHerbId: "herb_stable", substituteHerbId: "herb_immune", reason: "same_element", costMultiplier: 1.25, successRatePenalty: -8, durationMultiplier: 1.2 },
+  { originalHerbId: "herb_immune", substituteHerbId: "herb_stable", reason: "same_element", costMultiplier: 0.8, successRatePenalty: -8, durationMultiplier: 1.2 },
+
+  { originalHerbId: "herb_pure", substituteHerbId: "herb_antidote", reason: "similar_effect", costMultiplier: 0.86, successRatePenalty: -15, durationMultiplier: 1.4 },
+  { originalHerbId: "herb_pure", substituteHerbId: "herb_light", reason: "similar_effect", costMultiplier: 1.14, successRatePenalty: -12, durationMultiplier: 1.35 },
+  { originalHerbId: "herb_antidote", substituteHerbId: "herb_pure", reason: "similar_effect", costMultiplier: 1.17, successRatePenalty: -5, durationMultiplier: 0.9 },
+  { originalHerbId: "herb_energy", substituteHerbId: "herb_wood", reason: "similar_effect", costMultiplier: 0.79, successRatePenalty: -12, durationMultiplier: 1.35 },
+  { originalHerbId: "herb_wood", substituteHerbId: "herb_energy", reason: "similar_effect", costMultiplier: 1.27, successRatePenalty: -10, durationMultiplier: 1.2 },
+  { originalHerbId: "herb_immune", substituteHerbId: "herb_energy", reason: "similar_effect", costMultiplier: 1.12, successRatePenalty: -10, durationMultiplier: 1.25 },
+  { originalHerbId: "herb_stable", substituteHerbId: "herb_pure", reason: "similar_effect", costMultiplier: 1.75, successRatePenalty: -5, durationMultiplier: 0.95 },
+  { originalHerbId: "herb_cold", substituteHerbId: "herb_stable", reason: "similar_effect", costMultiplier: 1.33, successRatePenalty: -12, durationMultiplier: 1.3 },
+  { originalHerbId: "herb_fire", substituteHerbId: "herb_energy", reason: "similar_effect", costMultiplier: 1.56, successRatePenalty: -10, durationMultiplier: 1.2 },
+  { originalHerbId: "herb_fire", substituteHerbId: "herb_light", reason: "similar_effect", costMultiplier: 2.22, successRatePenalty: -8, durationMultiplier: 1.1 },
+];
+
+export function findSubstitutionsForHerb(herbId: string): SubstitutionRule[] {
+  return HERB_SUBSTITUTIONS.filter(r => r.originalHerbId === herbId);
+}
