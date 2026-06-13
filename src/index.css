@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=ZCOOL+XiaoWei&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: '"Noto Sans SC"', system-ui, sans-serif;
+  background: #f6f5f0;
+  color: #1a1a1a;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 76, 92, 0.05);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(42, 157, 143, 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(42, 157, 143, 0.6);
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-clinic-jade text-white rounded-lg font-medium shadow-md hover:shadow-glow hover:-translate-y-0.5 transition-all duration-200 disabled:bg-gray-300 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed;
+  }
+  .btn-danger {
+    @apply px-4 py-2 bg-clinic-crisis text-white rounded-lg font-medium shadow-md hover:shadow-danger hover:-translate-y-0.5 transition-all duration-200 disabled:bg-gray-300 disabled:shadow-none disabled:translate-y-0 disabled:cursor-not-allowed;
+  }
+  .btn-ghost {
+    @apply px-4 py-2 border-2 border-clinic-jade text-clinic-jade rounded-lg font-medium hover:bg-clinic-jade hover:text-white transition-all duration-200;
+  }
+  .btn-amber {
+    @apply px-4 py-2 bg-clinic-amber text-clinic-deep rounded-lg font-medium shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200;
+  }
+  .card {
+    @apply bg-clinic-card rounded-xl border border-clinic-border/50 shadow-card;
+  }
+  .tag {
+    @apply inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+}

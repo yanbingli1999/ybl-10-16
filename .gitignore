@@ -1,0 +1,75 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+build
+dist-ssr
+*.local
+.env
+.env.*
+!.env.example
+
+# Cache directories
+.cache/
+cache/
+.parcel-cache/
+.turbo/
+.vite/
+.eslintcache
+coverage/
+
+# Archives and packaged artifacts
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.gz
+
+# Large/binary media and generated data
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.iso
+*.dmg
+*.exe
+*.msi
+
+# Local tool metadata
+.trae/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Additional package manager/cache output
+.npm/
+.pnpm-store/
+.yarn/cache/
+.yarn/unplugged/
+tmp/
+temp/
+*.cache
+
+# Additional large generated/binary files
+*.sqlite
+*.sqlite3
+*.db
+*.psd
+*.ai
